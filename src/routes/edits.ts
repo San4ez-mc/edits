@@ -80,7 +80,7 @@ editsRouter.get('/api/edits/:id', requireAuth, async (req: Request, res: Respons
   res.json({ ok: true, edit });
 });
 
-const EDITABLE_FIELDS = ['status', 'categoryId', 'fixDescription', 'ownerComment', 'fixedAt'] as const;
+const EDITABLE_FIELDS = ['text', 'source', 'status', 'categoryId', 'fixDescription', 'ownerComment', 'fixedAt'] as const;
 
 editsRouter.patch('/api/edits/:id', requireAuth, async (req: Request, res: Response) => {
   const body = req.body || {};
@@ -88,9 +88,11 @@ editsRouter.patch('/api/edits/:id', requireAuth, async (req: Request, res: Respo
   for (const field of EDITABLE_FIELDS) {
     if (field in body) data[field] = field === 'fixedAt' && body[field] ? new Date(body[field]) : body[field];
   }
+  if ('text' in data) data.text = String(data.text).trim();
+  if ('source' in data) data.source = String(data.source).trim();
   if ('categoryId' in data) {
     data.categorizedBy = 'manual';
-    data.categorizedAt = new Date();
+    data.categorizedAt = data.categoryId ? new Date() : null;
   }
   try {
     const edit = await prisma.edit.update({ where: { id: req.params.id }, data, include: { images: true, category: true } });
