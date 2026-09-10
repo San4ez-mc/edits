@@ -1,6 +1,6 @@
 # Інтеграція «Правки» з flows-воронками та MCP-клієнтами
 
-Сервіс: https://edits.fineko.space (локально — http://localhost:4700).
+Сервіс: https://edits.fineko.space (локально — http://localhost:4800).
 Усі виклики нижче потребують токена — той самий `INGEST_TOKEN`/`MCP_SECRET` з `.env`
 сервісу (**не** SSO-токен користувача).
 

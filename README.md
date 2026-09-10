@@ -22,7 +22,7 @@ cp .env.example .env   # заповнити SSO_*, INGEST_TOKEN, ANTHROPIC_API_K
 createdb -U postgres -h localhost fineko_edits
 npm install
 npm run db:push
-npm run dev             # http://localhost:4700
+npm run dev             # http://localhost:4800
 ```
 
 Перед першим логіном — зареєструвати OAuth-клієнта в локальному SSO (`http://localhost:4600`):
@@ -30,7 +30,7 @@ npm run dev             # http://localhost:4700
 curl -X POST http://localhost:4600/admin/clients \
   -H "x-admin-key: <ADMIN_API_KEY з SSO/.env>" \
   -H "Content-Type: application/json" \
-  -d '{"name":"edits","redirectUris":["http://localhost:4700/auth/sso/callback"]}'
+  -d '{"name":"edits","redirectUris":["http://localhost:4800/auth/sso/callback"]}'
 ```
 Отриманий `clientId`/`clientSecret` — у `.env` як `EDITS_SSO_CLIENT_ID`/`EDITS_SSO_CLIENT_SECRET`.
 
@@ -44,7 +44,7 @@ POST /api/mcp                       # JSON-RPC (tools/list, tools/call) — ті
 
 ## Деплой
 `git pull → npm install → npm run db:push → pm2 restart edits` на VPS
-`/var/www/edits.fineko.space`, pm2-процес `edits` (`tsx src/index.ts`, :4700, без білду),
+`/var/www/edits.fineko.space`, pm2-процес `edits` (`tsx src/index.ts`, :4800, без білду),
 nginx домен `edits.fineko.space`. `.env` — на сервері, не в git; звірити prod
 `EDITS_SSO_CLIENT_ID/SECRET` (зареєструвати клієнта в прод-SSO з prod redirect-URI) і
 `ANTHROPIC_API_KEY`.

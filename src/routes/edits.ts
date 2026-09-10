@@ -43,13 +43,25 @@ editsRouter.post('/api/edits', requireTokenOrSession(INGEST_TOKEN, (req) => !!cu
 });
 
 // ── CRUD для UI (SSO-сесія) ───────────────────────────────────────
+editsRouter.get('/api/edits/sources', requireAuth, async (_req: Request, res: Response) => {
+  const rows = await prisma.edit.findMany({ distinct: ['source'], select: { source: true }, orderBy: { source: 'asc' } });
+  res.json({ ok: true, sources: rows.map((r) => r.source) });
+});
+
 editsRouter.get('/api/edits', requireAuth, async (req: Request, res: Response) => {
-  const { status, categoryId, source, from, to, q } = req.query as Record<string, string | undefined>;
+  const { status, categoryId, source, from, to, q, includeArchived } = req.query as Record<string, string | undefined>;
   const page = Math.max(1, Number(req.query.page) || 1);
   const pageSize = Math.min(100, Math.max(1, Number(req.query.pageSize) || 25));
 
   const where: Record<string, unknown> = {};
-  if (status) where.status = status;
+  if (status) {
+    where.status = status;
+  } else if (includeArchived !== 'true') {
+    // За замовчуванням архівовані правки не показуємо (ані в списку без фільтра
+    // статусу, ані в категоріях/аналітиці) — тільки коли явно обрано статус
+    // «Архів» або ввімкнено перемикач «показувати архівовані».
+    where.status = { not: 'archived' };
+  }
   if (categoryId) where.categoryId = categoryId === 'null' ? null : categoryId;
   if (source) where.source = source;
   if (from || to) {

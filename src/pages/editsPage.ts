@@ -10,9 +10,11 @@ export function editsPage(user: SessionUser): string {
     <input id="f-q" placeholder="пошук у тексті правки">
     <input id="f-from" type="date">
     <input id="f-to" type="date">
+    <label style="display:flex;align-items:center;gap:6px;font-size:12.5px;color:#8b949e"><input type="checkbox" id="f-archived" style="width:auto"> показувати архівовані</label>
     <button class="ghost" id="btn-filter">Фільтрувати</button>
     <button class="primary" id="btn-add" style="margin-left:auto">+ Додати правку</button>
   </div>
+  <div id="total-count" class="muted" style="margin-bottom:10px;font-size:13px">Завантаження…</div>
   <table>
     <thead><tr><th>Дата</th><th>Правка</th><th>Зображення</th><th>Джерело</th><th>Категорія</th><th>Статус</th><th>Дії</th></tr></thead>
     <tbody id="rows"><tr><td colspan="7" class="muted">Завантаження…</td></tr></tbody>
@@ -75,12 +77,31 @@ let editingId = null;
 function esc(s){return String(s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function fmtDate(d){ return d ? new Date(d).toISOString().slice(0,10) : ''; }
 
+const TEXT_LIMIT = 300;
+
 async function loadCategories(){
   const res = await fetch('/api/categories');
   const data = await res.json();
   if(data.ok) categories = data.categories;
   const sel = document.getElementById('e-category');
   sel.innerHTML = '<option value="">Без категорії</option>' + categories.map(c => '<option value="'+c.id+'">'+esc(c.name)+'</option>').join('');
+}
+
+async function loadSources(){
+  const res = await fetch('/api/edits/sources');
+  const data = await res.json();
+  if(!data.ok) return;
+  const sel = document.getElementById('f-source');
+  const current = sel.value;
+  sel.innerHTML = '<option value="">Усі джерела</option>' + data.sources.map(s => '<option value="'+esc(s)+'">'+esc(s)+'</option>').join('');
+  sel.value = current;
+}
+
+function renderTextCell(e){
+  const full = esc(e.text);
+  if(e.text.length <= TEXT_LIMIT) return '<span class="edit-text">'+full+'</span>';
+  const short = esc(e.text.slice(0, TEXT_LIMIT)) + '…';
+  return '<span class="edit-text" data-short="'+encodeURIComponent(short)+'" data-full="'+encodeURIComponent(full)+'" data-expanded="0">'+short+'</span> <a href="#" class="more-toggle" data-id="'+e.id+'">детальніше</a>';
 }
 
 async function loadEdits(){
@@ -90,25 +111,37 @@ async function loadEdits(){
   const q = document.getElementById('f-q').value; if(q) params.set('q', q);
   const from = document.getElementById('f-from').value; if(from) params.set('from', from);
   const to = document.getElementById('f-to').value; if(to) params.set('to', to);
+  if(document.getElementById('f-archived').checked) params.set('includeArchived', 'true');
   params.set('page', page); params.set('pageSize', 25);
   const res = await fetch('/api/edits?'+params.toString());
   const data = await res.json();
   const rows = document.getElementById('rows');
-  if(!data.ok || !data.items.length){ rows.innerHTML = '<tr><td colspan="7" class="muted">Нічого не знайдено</td></tr>'; return; }
+  const totalEl = document.getElementById('total-count');
+  if(!data.ok){ rows.innerHTML = '<tr><td colspan="7" class="muted">Помилка завантаження</td></tr>'; totalEl.textContent = ''; return; }
+  totalEl.textContent = 'Всього: ' + data.total + ' правок';
+  if(!data.items.length){ rows.innerHTML = '<tr><td colspan="7" class="muted">Нічого не знайдено</td></tr>'; document.getElementById('pager').innerHTML = ''; return; }
   editsById = {};
   rows.innerHTML = data.items.map(e => {
     editsById[e.id] = e;
     const date = new Date(e.createdAt).toLocaleString('uk-UA', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
     const imgs = (e.images||[]).map(img => '<img class="thumb" src="'+img.filePath+'" onclick="openImg(\\''+img.filePath+'\\')">').join(' ');
     const cat = e.category ? esc(e.category.name) : '<span class="muted">без категорії</span>';
-    return '<tr><td>'+date+'</td><td style="max-width:360px">'+esc(e.text)+'</td><td>'+(imgs||'<span class="muted">—</span>')+'</td><td>'+esc(e.source)+'</td><td>'+cat+'</td><td><span class="badge '+e.status+'">'+(STATUS_LABELS[e.status]||e.status)+'</span></td>'
+    return '<tr><td>'+date+'</td><td style="max-width:420px">'+renderTextCell(e)+'</td><td>'+(imgs||'<span class="muted">—</span>')+'</td><td>'+esc(e.source)+'</td><td>'+cat+'</td><td><span class="badge '+e.status+'">'+(STATUS_LABELS[e.status]||e.status)+'</span></td>'
       + '<td style="white-space:nowrap"><button class="ghost" data-edit="'+e.id+'">Редагувати</button> <button class="ghost" data-del="'+e.id+'" style="color:#f85149">Видалити</button></td></tr>';
   }).join('');
   rows.querySelectorAll('[data-edit]').forEach(btn => { btn.onclick = () => openEditModal(btn.dataset.edit); });
   rows.querySelectorAll('[data-del]').forEach(btn => { btn.onclick = () => deleteEdit(btn.dataset.del); });
+  rows.querySelectorAll('.more-toggle').forEach(a => { a.onclick = (ev) => {
+    ev.preventDefault();
+    const span = a.previousElementSibling;
+    const expanded = span.dataset.expanded === '1';
+    span.innerHTML = decodeURIComponent(expanded ? span.dataset.short : span.dataset.full);
+    span.dataset.expanded = expanded ? '0' : '1';
+    a.textContent = expanded ? 'детальніше' : 'згорнути';
+  }; });
   const pager = document.getElementById('pager');
   const totalPages = Math.max(1, Math.ceil(data.total / data.pageSize));
-  pager.innerHTML = '<button class="ghost" id="prevPage" '+(page<=1?'disabled':'')+'>← Назад</button><span class="muted">стор. '+page+' з '+totalPages+' ('+data.total+' правок)</span><button class="ghost" id="nextPage" '+(page>=totalPages?'disabled':'')+'>Далі →</button>';
+  pager.innerHTML = '<button class="ghost" id="prevPage" '+(page<=1?'disabled':'')+'>← Назад</button><span class="muted">стор. '+page+' з '+totalPages+'</span><button class="ghost" id="nextPage" '+(page>=totalPages?'disabled':'')+'>Далі →</button>';
   const prevBtn = document.getElementById('prevPage'); if(prevBtn) prevBtn.onclick = ()=>{page--; loadEdits();};
   const nextBtn = document.getElementById('nextPage'); if(nextBtn) nextBtn.onclick = ()=>{page++; loadEdits();};
 }
@@ -189,7 +222,12 @@ document.getElementById('m-save').onclick = async () => {
   page = 1; loadEdits();
 };
 
+const today = new Date().toISOString().slice(0, 10);
+document.getElementById('f-from').value = today;
+document.getElementById('f-to').value = today;
+
 loadCategories();
+loadSources();
 loadEdits();
 `;
 
