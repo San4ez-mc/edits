@@ -1,0 +1,70 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Угруповання правок. Створюється AI (переважно) або вручну власником.
+model Category {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  createdBy   String   @default("manual") // manual | ai
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  edits Edit[]
+
+  @@map("categories")
+}
+
+// Одна правка/скарга користувача.
+model Edit {
+  id         String  @id @default(uuid())
+  text       String // текст правки/скарги
+  source     String // 'goverla' | 'covercar' | 'content2' | 'flows' | 'manual' | ...
+  sourceRef  String? @map("source_ref") // chat_id / sessionId / url з джерела
+  reporterName String? @map("reporter_name")
+
+  // new | in_progress | fixed | no_effect | archived
+  status     String   @default("new")
+  categoryId String?  @map("category_id")
+  category   Category? @relation(fields: [categoryId], references: [id])
+
+  categorizedBy      String?   @map("categorized_by") // 'ai' | 'manual'
+  categorizedAt       DateTime? @map("categorized_at")
+  categorizeAttempts  Int       @default(0) @map("categorize_attempts")
+
+  fixDescription String?   @map("fix_description") // що зроблено для виправлення
+  ownerComment   String?   @map("owner_comment") // коментар власника — чи дало ефект
+  fixedAt        DateTime? @map("fixed_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  images EditImage[]
+
+  @@index([status])
+  @@index([categoryId])
+  @@index([source])
+  @@index([createdAt])
+  @@map("edits")
+}
+
+model EditImage {
+  id       String @id @default(uuid())
+  editId   String @map("edit_id")
+  edit     Edit   @relation(fields: [editId], references: [id], onDelete: Cascade)
+  filePath String @map("file_path") // /uploads/<editId>/<ts>-<rand>.<ext>
+  fileName String @map("file_name")
+  mimeType String @map("mime_type")
+  fileSize Int    @map("file_size")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([editId])
+  @@map("edit_images")
+}
