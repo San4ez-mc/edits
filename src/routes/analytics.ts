@@ -59,7 +59,7 @@ analyticsRouter.get('/api/analytics/summary', requireAuth, async (req: Request, 
     prisma.edit.count({ where: { createdAt: { gte: from, lte: to }, status: EXCLUDE_ARCHIVED } }),
     prisma.edit.groupBy({ by: ['status'], where: { createdAt: { gte: from, lte: to }, status: EXCLUDE_ARCHIVED }, _count: true }),
   ]);
-  const byStatus: Record<string, number> = { new: 0, in_progress: 0, fixed: 0, no_effect: 0 };
+  const byStatus: Record<string, number> = { new: 0, in_progress: 0, needs_admin: 0, fixed: 0, no_effect: 0 };
   for (const row of byStatusRaw) byStatus[row.status] = row._count;
   const resolvedPct = total > 0 ? Math.round(((byStatus.fixed || 0) / total) * 100) : 0;
 

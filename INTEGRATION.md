@@ -39,7 +39,7 @@ tool-нода агента — виклик іде напряму з коду н
   "inputSchema": {
     "type": "object",
     "properties": {
-      "status": { "type": "string", "description": "new|in_progress|fixed|no_effect|archived" },
+      "status": { "type": "string", "description": "new|in_progress|needs_admin|fixed|no_effect|archived" },
       "categoryId": { "type": "string" },
       "source": { "type": "string" },
       "limit": { "type": "number" }

@@ -29,7 +29,7 @@ model Edit {
   sourceRef  String? @map("source_ref") // chat_id / sessionId / url з джерела
   reporterName String? @map("reporter_name")
 
-  // new | in_progress | fixed | no_effect | archived
+  // new | in_progress | needs_admin | fixed | no_effect | archived
   status     String   @default("new")
   categoryId String?  @map("category_id")
   category   Category? @relation(fields: [categoryId], references: [id])

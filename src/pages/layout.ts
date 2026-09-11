@@ -38,6 +38,7 @@ th{color:#8b949e;font-weight:600;font-size:11.5px;text-transform:uppercase;lette
 .badge.in_progress{color:#d29922;border-color:#9e6a03}
 .badge.fixed{color:#7ee787;border-color:#2ea043}
 .badge.no_effect{color:#f85149;border-color:#f85149}
+.badge.needs_admin{color:#d2a8ff;border-color:#8957e5}
 .badge.archived{color:#8b949e}
 .spark{display:flex;align-items:flex-end;gap:2px;height:24px}
 .spark-bar{width:5px;background:#58a6ff;border-radius:1px;min-height:2px}
@@ -93,6 +94,7 @@ ${opts.extraScript ? `<script>${opts.extraScript}</script>` : ''}
 export const STATUS_LABELS: Record<string, string> = {
   new: 'Новий',
   in_progress: 'У роботі',
+  needs_admin: 'Потрібне втручання адміна',
   fixed: 'Виправлено',
   no_effect: 'Без ефекту',
   archived: 'Архів',

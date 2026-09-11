@@ -52,8 +52,8 @@ export function analyticsPage(user: SessionUser): string {
 Chart.defaults.color = '#8b949e';
 Chart.defaults.borderColor = '#21262d';
 const COLORS = ['#58a6ff','#7ee787','#f0883e','#d29922','#f85149','#a371f7','#8b949e'];
-const STATUS_COLORS = { new:'#58a6ff', in_progress:'#d29922', fixed:'#7ee787', no_effect:'#f85149', archived:'#8b949e' };
-const STATUS_LABELS = { new:'Новий', in_progress:'У роботі', fixed:'Виправлено', no_effect:'Без ефекту', archived:'Архів' };
+const STATUS_COLORS = { new:'#58a6ff', in_progress:'#d29922', needs_admin:'#8957e5', fixed:'#7ee787', no_effect:'#f85149', archived:'#8b949e' };
+const STATUS_LABELS = { new:'Новий', in_progress:'У роботі', needs_admin:'Потрібне втручання адміна', fixed:'Виправлено', no_effect:'Без ефекту', archived:'Архів' };
 let lineChart, barChart;
 
 function esc(s){return String(s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}

@@ -13,7 +13,7 @@ categoriesRouter.get('/api/categories', requireAuth, async (_req: Request, res: 
   const withCounts = await Promise.all(
     categories.map(async (c) => {
       const byStatus = await prisma.edit.groupBy({ by: ['status'], where: { categoryId: c.id, status: EXCLUDE_ARCHIVED }, _count: true });
-      const counts: Record<string, number> = { new: 0, in_progress: 0, fixed: 0, no_effect: 0 };
+      const counts: Record<string, number> = { new: 0, in_progress: 0, needs_admin: 0, fixed: 0, no_effect: 0 };
       let total = 0;
       for (const row of byStatus) {
         counts[row.status] = row._count;
