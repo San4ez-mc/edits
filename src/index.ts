@@ -13,6 +13,7 @@ import { categoriesRouter } from './routes/categories';
 import { analyticsRouter } from './routes/analytics';
 import { agentToolsRouter } from './routes/agentTools';
 import { mcpRouter } from './routes/mcp';
+import { exportRouter } from './routes/exportRouter';
 import { editsPage } from './pages/editsPage';
 import { categoriesPage } from './pages/categoriesPage';
 import { analyticsPage } from './pages/analyticsPage';
@@ -36,6 +37,7 @@ app.use(categoriesRouter);
 app.use(analyticsRouter);
 app.use(agentToolsRouter);
 app.use(mcpRouter);
+app.use(exportRouter);
 
 app.get('/', (req, res) => res.redirect('/edits'));
 app.get('/edits', requireAuth, (req, res) => res.type('html').send(editsPage(currentUser(req)!)));

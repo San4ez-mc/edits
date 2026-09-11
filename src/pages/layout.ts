@@ -83,7 +83,10 @@ ${opts.extraHead || ''}
 <header class="top">
   <h1>🛠 Правки FINEKO</h1>
   <nav>${nav}</nav>
-  <div class="user">${opts.user ? `<span>${opts.user.email}</span><a href="/auth/logout">вийти</a>` : ''}</div>
+  <div class="user">
+    <a href="/api/export" download class="badge" style="color:#7ee787;border-color:#2ea043;text-decoration:none">⬇ Експорт JSON</a>
+    ${opts.user ? `<span>${opts.user.email}</span><a href="/auth/logout">вийти</a>` : ''}
+  </div>
 </header>
 ${opts.bodyHtml}
 </div>
