@@ -11,14 +11,15 @@ export function editsPage(user: SessionUser): string {
     <input id="f-from" type="date">
     <input id="f-to" type="date">
     <label style="display:flex;align-items:center;gap:6px;font-size:12.5px;color:#8b949e"><input type="checkbox" id="f-archived" style="width:auto"> показувати архівовані</label>
-    <button class="ghost" id="btn-filter">Фільтрувати</button>
     <button class="primary" id="btn-add" style="margin-left:auto">+ Додати правку</button>
   </div>
   <div id="total-count" class="muted" style="margin-bottom:10px;font-size:13px">Завантаження…</div>
-  <table>
-    <thead><tr><th>Дата</th><th>Правка</th><th>Зображення</th><th>Джерело</th><th>Категорія</th><th>Статус</th><th>Дії</th></tr></thead>
-    <tbody id="rows"><tr><td colspan="7" class="muted">Завантаження…</td></tr></tbody>
-  </table>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Дата</th><th>Правка</th><th>Зображення</th><th>Джерело</th><th>Категорія</th><th>Статус</th><th>Дії</th></tr></thead>
+      <tbody id="rows"><tr><td colspan="7" class="muted">Завантаження…</td></tr></tbody>
+    </table>
+  </div>
   <div id="pager" style="margin-top:10px;display:flex;gap:8px;align-items:center"></div>
 </div>
 
@@ -200,7 +201,12 @@ window.openImg = function(src){
 };
 document.getElementById('imgModal').onclick = () => { document.getElementById('imgModal').style.display = 'none'; };
 
-document.getElementById('btn-filter').onclick = () => { page = 1; loadEdits(); };
+// Живе фільтрування — без кнопки: select/date/checkbox фільтрують одразу,
+// текстовий пошук — з невеликим дебаунсом, щоб не смикати сервер на кожну літеру.
+function refilter(){ page = 1; loadEdits(); }
+['f-status','f-source','f-from','f-to','f-archived'].forEach(id => { document.getElementById(id).onchange = refilter; });
+let searchDebounce;
+document.getElementById('f-q').oninput = () => { clearTimeout(searchDebounce); searchDebounce = setTimeout(refilter, 400); };
 document.getElementById('btn-add').onclick = () => { document.getElementById('modal').style.display = 'flex'; document.getElementById('m-error').textContent=''; };
 document.getElementById('m-cancel').onclick = () => { document.getElementById('modal').style.display = 'none'; };
 document.getElementById('modal').addEventListener('click', (e) => { if(e.target.id === 'modal') document.getElementById('modal').style.display = 'none'; });

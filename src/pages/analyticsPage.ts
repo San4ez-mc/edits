@@ -26,10 +26,12 @@ export function analyticsPage(user: SessionUser): string {
 
 <div class="card">
   <h3 style="margin-top:0">Категорії за обсягом</h3>
-  <table>
-    <thead><tr><th>Категорія</th><th>Правок у періоді</th><th>% виправлено</th></tr></thead>
-    <tbody id="catRows"><tr><td colspan="3" class="muted">Завантаження…</td></tr></tbody>
-  </table>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Категорія</th><th>Правок у періоді</th><th>% виправлено</th></tr></thead>
+      <tbody id="catRows"><tr><td colspan="3" class="muted">Завантаження…</td></tr></tbody>
+    </table>
+  </div>
 </div>
 `;
 

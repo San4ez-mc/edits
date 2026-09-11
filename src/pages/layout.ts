@@ -10,7 +10,7 @@ const TABS = [
 ];
 
 const BASE_CSS = `
-body{font-family:system-ui,-apple-system,sans-serif;margin:0;background:#0b0f1a;color:#e6edf3;min-height:100vh}
+body{font-family:system-ui,-apple-system,sans-serif;margin:0;background:#0b0f1a;color:#e6edf3;min-height:100vh;overflow-x:hidden}
 .wrap{max-width:1280px;margin:0 auto;padding:20px 16px 60px}
 a{color:#58a6ff;text-decoration:none}
 header.top{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:18px;flex-wrap:wrap}
@@ -28,9 +28,10 @@ button.primary{background:#238636;border-color:#2ea043;color:#fff}
 button.primary:hover{background:#2ea043}
 button.ghost{background:none;color:#8b949e}
 button.ghost:hover{color:#e6edf3;border-color:#8b949e}
+.table-wrap{overflow-x:auto;margin:0 -16px;padding:0 16px}
 table{width:100%;border-collapse:collapse;font-size:13px}
 th,td{text-align:left;padding:8px 10px;border-bottom:1px solid #21262d;vertical-align:top}
-th{color:#8b949e;font-weight:600;font-size:11.5px;text-transform:uppercase;letter-spacing:.03em}
+th{color:#8b949e;font-weight:600;font-size:11.5px;text-transform:uppercase;letter-spacing:.03em;white-space:nowrap}
 .muted{color:#8b949e}
 .badge{font-size:11px;border-radius:6px;padding:2px 8px;border:1px solid #30363d;display:inline-block;white-space:nowrap}
 .badge.new{color:#58a6ff;border-color:#1f6feb}
@@ -39,8 +40,15 @@ th{color:#8b949e;font-weight:600;font-size:11.5px;text-transform:uppercase;lette
 .badge.no_effect{color:#f85149;border-color:#f85149}
 .badge.archived{color:#8b949e}
 .thumb{width:44px;height:44px;object-fit:cover;border-radius:6px;border:1px solid #30363d;cursor:zoom-in}
-.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center}
 .filters select,.filters input{min-width:120px}
+@media (max-width:640px){
+  .wrap{padding:14px 12px 40px}
+  header.top{gap:8px}
+  h1{font-size:16px}
+  .filters select,.filters input,.filters button{flex:1 1 100%;min-width:0}
+  .filters label{flex:1 1 100%}
+}
 .grid2{display:grid;grid-template-columns:280px 1fr;gap:16px}
 @media (max-width:860px){.grid2{grid-template-columns:1fr}}
 .cat-item{padding:10px 12px;border-radius:8px;cursor:pointer;border:1px solid transparent;margin-bottom:4px}
