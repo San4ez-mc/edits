@@ -77,6 +77,8 @@ let categories = [];
 let editingId = null;
 function esc(s){return String(s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function fmtDate(d){ return d ? new Date(d).toISOString().slice(0,10) : ''; }
+// Формат дат у всій системі — ДД.ММ.РР (2-значний рік), локальний час браузера.
+function fmtDateTimeShort(d){ const dt=new Date(d); const p=n=>String(n).padStart(2,'0'); return p(dt.getDate())+'.'+p(dt.getMonth()+1)+'.'+String(dt.getFullYear()).slice(-2)+', '+p(dt.getHours())+':'+p(dt.getMinutes()); }
 
 const TEXT_LIMIT = 300;
 
@@ -124,7 +126,7 @@ async function loadEdits(){
   editsById = {};
   rows.innerHTML = data.items.map(e => {
     editsById[e.id] = e;
-    const date = new Date(e.createdAt).toLocaleString('uk-UA', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+    const date = fmtDateTimeShort(e.createdAt);
     const imgs = (e.images||[]).map(img => '<img class="thumb" src="'+img.filePath+'" onclick="openImg(\\''+img.filePath+'\\')">').join(' ');
     const cat = e.category ? esc(e.category.name) : '<span class="muted">без категорії</span>';
     return '<tr><td>'+date+'</td><td style="max-width:420px">'+renderTextCell(e)+'</td><td>'+(imgs||'<span class="muted">—</span>')+'</td><td>'+esc(e.source)+'</td><td>'+cat+'</td><td><span class="badge '+e.status+'">'+(STATUS_LABELS[e.status]||e.status)+'</span></td>'

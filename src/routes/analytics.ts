@@ -63,14 +63,14 @@ analyticsRouter.get('/api/analytics/summary', requireAuth, async (req: Request, 
   for (const row of byStatusRaw) byStatus[row.status] = row._count;
   const resolvedPct = total > 0 ? Math.round(((byStatus.fixed || 0) / total) * 100) : 0;
 
-  const now = new Date();
-  const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-  const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
-  const [thisWeek, lastWeek] = await Promise.all([
-    prisma.edit.count({ where: { createdAt: { gte: weekAgo, lte: now }, status: EXCLUDE_ARCHIVED } }),
-    prisma.edit.count({ where: { createdAt: { gte: twoWeeksAgo, lt: weekAgo }, status: EXCLUDE_ARCHIVED } }),
-  ]);
-  const deltaPct = lastWeek > 0 ? Math.round(((thisWeek - lastWeek) / lastWeek) * 100) : thisWeek > 0 ? 100 : 0;
+  // Попередній період тієї самої довжини, що й вибраний фільтр (from..to) — а не
+  // завжди "останні 7 днів": якщо обрано місяць, порівнюємо з попереднім місяцем.
+  const periodMs = to.getTime() - from.getTime();
+  const prevTo = new Date(from.getTime() - 1);
+  const prevFrom = new Date(from.getTime() - periodMs - 1);
+  const lastPeriod = await prisma.edit.count({ where: { createdAt: { gte: prevFrom, lte: prevTo }, status: EXCLUDE_ARCHIVED } });
+  const thisPeriod = total; // total уже рахує рівно [from, to]
+  const deltaPct = lastPeriod > 0 ? Math.round(((thisPeriod - lastPeriod) / lastPeriod) * 100) : thisPeriod > 0 ? 100 : 0;
 
   const categories = await prisma.category.findMany({ select: { id: true, name: true } });
   const byCategory = await Promise.all(
@@ -80,6 +80,11 @@ analyticsRouter.get('/api/analytics/summary', requireAuth, async (req: Request, 
       return { id: c.id, name: c.name, total: catTotal, resolvedPct: catTotal > 0 ? Math.round((catFixed / catTotal) * 100) : 0 };
     })
   );
+  const uncatTotal = await prisma.edit.count({ where: { categoryId: null, createdAt: { gte: from, lte: to }, status: EXCLUDE_ARCHIVED } });
+  const uncatFixed = await prisma.edit.count({ where: { categoryId: null, status: 'fixed', createdAt: { gte: from, lte: to } } });
+  if (uncatTotal > 0) {
+    byCategory.push({ id: 'null', name: 'Без категорії', total: uncatTotal, resolvedPct: Math.round((uncatFixed / uncatTotal) * 100) });
+  }
   byCategory.sort((a, b) => b.total - a.total);
 
   res.json({
@@ -87,7 +92,7 @@ analyticsRouter.get('/api/analytics/summary', requireAuth, async (req: Request, 
     total,
     resolvedPct,
     byStatus,
-    trend: { thisWeek, lastWeek, deltaPct },
+    trend: { thisPeriod, lastPeriod, deltaPct },
     byCategory,
   });
 });

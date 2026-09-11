@@ -39,6 +39,8 @@ th{color:#8b949e;font-weight:600;font-size:11.5px;text-transform:uppercase;lette
 .badge.fixed{color:#7ee787;border-color:#2ea043}
 .badge.no_effect{color:#f85149;border-color:#f85149}
 .badge.archived{color:#8b949e}
+.spark{display:flex;align-items:flex-end;gap:2px;height:24px}
+.spark-bar{width:5px;background:#58a6ff;border-radius:1px;min-height:2px}
 .thumb{width:44px;height:44px;object-fit:cover;border-radius:6px;border:1px solid #30363d;cursor:zoom-in}
 .filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center}
 .filters select,.filters input{min-width:120px}

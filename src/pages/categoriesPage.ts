@@ -22,6 +22,8 @@ const STATUS_LABELS = ${JSON.stringify(STATUS_LABELS)};
 let activeCategoryId = '';
 function esc(s){return String(s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function fmtDate(d){ return d ? new Date(d).toISOString().slice(0,10) : ''; }
+// Формат дат у всій системі — ДД.ММ.РР (2-значний рік), локальний час браузера.
+function fmtDateTimeShort(d){ const dt=new Date(d); const p=n=>String(n).padStart(2,'0'); return p(dt.getDate())+'.'+p(dt.getMonth()+1)+'.'+String(dt.getFullYear()).slice(-2)+', '+p(dt.getHours())+':'+p(dt.getMinutes()); }
 
 async function loadCategories(){
   const res = await fetch('/api/categories');
@@ -56,7 +58,7 @@ async function loadEdits(){
 function renderEditRow(e){
   const statusOpts = Object.entries(STATUS_LABELS).map(([v,l]) => '<option value="'+v+'" '+(e.status===v?'selected':'')+'>'+l+'</option>').join('');
   return '<div class="card" style="background:#0d1117" id="row-'+e.id+'">'
-    + '<div class="muted" style="font-size:11px;margin-bottom:4px">'+new Date(e.createdAt).toLocaleString('uk-UA')+' · '+esc(e.source)+'</div>'
+    + '<div class="muted" style="font-size:11px;margin-bottom:4px">'+fmtDateTimeShort(e.createdAt)+' · '+esc(e.source)+'</div>'
     + '<div style="margin-bottom:10px">'+esc(e.text)+'</div>'
     + '<div class="field"><label>Статус</label><select id="st-'+e.id+'">'+statusOpts+'</select></div>'
     + '<div class="field"><label>Що зроблено для виправлення</label><textarea id="fx-'+e.id+'" rows="2">'+esc(e.fixDescription)+'</textarea></div>'
