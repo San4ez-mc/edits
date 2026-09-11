@@ -15,6 +15,11 @@ export function analyticsPage(user: SessionUser): string {
 <div class="stat-row" id="stats"></div>
 
 <div class="card">
+  <h3 style="margin-top:0">Всього скарг по днях</h3>
+  <canvas id="totalChart" height="90"></canvas>
+</div>
+
+<div class="card">
   <h3 style="margin-top:0">Скарги по днях (топ-6 категорій)</h3>
   <canvas id="lineChart" height="90"></canvas>
 </div>
@@ -54,7 +59,7 @@ Chart.defaults.borderColor = '#21262d';
 const COLORS = ['#58a6ff','#7ee787','#f0883e','#d29922','#f85149','#a371f7','#8b949e'];
 const STATUS_COLORS = { new:'#58a6ff', in_progress:'#d29922', needs_admin:'#8957e5', fixed:'#7ee787', no_effect:'#f85149', archived:'#8b949e' };
 const STATUS_LABELS = { new:'Новий', in_progress:'У роботі', needs_admin:'Потрібне втручання адміна', fixed:'Виправлено', no_effect:'Без ефекту', archived:'Архів' };
-let lineChart, barChart;
+let totalChart, lineChart, barChart;
 
 function esc(s){return String(s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 // Формат дат у всій системі — ДД.ММ.РР (2-значний рік). day тут — чистий рядок
@@ -84,7 +89,10 @@ async function loadSummary(){
     : '<tr><td colspan="3" class="muted">Немає даних за період</td></tr>';
 }
 
-async function loadLineChart(){
+// Один fetch по /api/analytics/daily?groupBy=category — з нього рендеримо графік
+// "Всього" (окремо, щоб не губився на фоні кольорових ліній категорій), графік
+// топ-6 категорій і таблицю повторюваних правок.
+async function loadCategoryData(){
   const params = rangeParams(); params.set('groupBy','category');
   const res = await fetch('/api/analytics/daily?'+params.toString());
   const data = await res.json();
@@ -92,35 +100,41 @@ async function loadLineChart(){
   const days = [...new Set(data.rows.map(r=>r.day))].sort();
   const totalsByKey = {};
   for(const r of data.rows){ totalsByKey[r.key] = (totalsByKey[r.key]||0) + r.count; }
-  const topKeys = Object.entries(totalsByKey).sort((a,b)=>b[1]-a[1]).slice(0,6).map(x=>x[0]);
   const labelByKey = {};
   for(const r of data.rows) labelByKey[r.key] = r.label;
   const totalByDay = {};
   for(const r of data.rows){ totalByDay[r.day] = (totalByDay[r.day]||0) + r.count; }
-  const datasets = [
-    {
+
+  if(totalChart) totalChart.destroy();
+  totalChart = new Chart(document.getElementById('totalChart'), {
+    type: 'line',
+    data: { labels: days.map(fmtDayLabel), datasets: [{
       label: 'Всього скарг',
       data: days.map(d => totalByDay[d] || 0),
-      borderColor: '#e6edf3',
-      backgroundColor: '#e6edf3',
-      borderWidth: 3,
-      borderDash: [6, 3],
+      borderColor: '#58a6ff',
+      backgroundColor: 'rgba(88,166,255,.12)',
+      borderWidth: 2,
       tension: 0.25,
-    },
-    ...topKeys.map((key, i) => ({
-      label: labelByKey[key],
-      data: days.map(d => { const row = data.rows.find(r=>r.day===d && r.key===key); return row ? row.count : 0; }),
-      borderColor: COLORS[i % COLORS.length],
-      backgroundColor: COLORS[i % COLORS.length],
-      tension: 0.25,
-    })),
-  ];
+      fill: true,
+    }] },
+    options: { responsive: true, plugins: { legend: { display: false } }, scales: { x: { grid: { color: '#21262d' } }, y: { grid: { color: '#21262d' }, beginAtZero: true } } },
+  });
+
+  const topKeys = Object.entries(totalsByKey).sort((a,b)=>b[1]-a[1]).slice(0,6).map(x=>x[0]);
+  const datasets = topKeys.map((key, i) => ({
+    label: labelByKey[key],
+    data: days.map(d => { const row = data.rows.find(r=>r.day===d && r.key===key); return row ? row.count : 0; }),
+    borderColor: COLORS[i % COLORS.length],
+    backgroundColor: COLORS[i % COLORS.length],
+    tension: 0.25,
+  }));
   if(lineChart) lineChart.destroy();
   lineChart = new Chart(document.getElementById('lineChart'), {
     type: 'line',
     data: { labels: days.map(fmtDayLabel), datasets },
     options: { responsive: true, plugins: { legend: { position: 'bottom' } }, scales: { x: { grid: { color: '#21262d' } }, y: { grid: { color: '#21262d' }, beginAtZero: true } } },
   });
+
   renderRepeats(data, days, totalsByKey, labelByKey);
 }
 
@@ -162,7 +176,7 @@ async function loadBarChart(){
   });
 }
 
-function loadAll(){ loadSummary(); loadLineChart(); loadBarChart(); }
+function loadAll(){ loadSummary(); loadCategoryData(); loadBarChart(); }
 document.getElementById('btn-apply').onclick = loadAll;
 
 // Локальна (не UTC!) дата браузера — той самий фікс, що на /edits: toISOString()
