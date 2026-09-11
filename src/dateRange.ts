@@ -28,6 +28,13 @@ export function startOfDayUTC(dateStr: string): Date {
   return localMidnightUTC(dateStr, TIMEZONE);
 }
 
+// Ключ дня для групування ("2026-09-11") — теж по київському часу, інакше правка,
+// створена о 23:xx Києва (=20:xx UTC), і правка о 01:xx Києва наступної доби (=22:xx
+// UTC попередньої) обидві падали в один UTC-день на графіках аналітики.
+export function localDateKey(date: Date, timeZone: string = TIMEZONE): string {
+  return new Intl.DateTimeFormat('en-CA', { timeZone, year: 'numeric', month: '2-digit', day: '2-digit' }).format(date);
+}
+
 export function endOfDayUTC(dateStr: string): Date {
   // Кінець доби = початок наступної доби мінус 1мс — надійніше за "23:59:59.999",
   // яке довелось би саме так само зсувати під таймзону.

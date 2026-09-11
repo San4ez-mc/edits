@@ -1,7 +1,7 @@
 import { Router, type Request, type Response } from 'express';
 import { prisma } from '../db';
 import { requireAuth } from '../auth';
-import { startOfDayUTC, endOfDayUTC } from '../dateRange';
+import { startOfDayUTC, endOfDayUTC, localDateKey } from '../dateRange';
 
 export const analyticsRouter = Router();
 
@@ -33,7 +33,7 @@ analyticsRouter.get('/api/analytics/daily', requireAuth, async (req: Request, re
 
   const buckets = new Map<string, Map<string, { count: number; label: string }>>();
   for (const e of edits) {
-    const day = e.createdAt.toISOString().slice(0, 10);
+    const day = localDateKey(e.createdAt);
     const key = groupBy === 'status' ? e.status : e.categoryId || 'null';
     const label = groupBy === 'status' ? e.status : e.category?.name || 'Без категорії';
     if (!buckets.has(day)) buckets.set(day, new Map());
