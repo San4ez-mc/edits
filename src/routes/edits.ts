@@ -3,6 +3,7 @@ import { prisma } from '../db';
 import { requireAuth, currentUser } from '../auth';
 import { requireTokenOrSession } from '../apiToken';
 import { upload, saveEditImages } from '../upload';
+import { startOfDayUTC, endOfDayUTC } from '../dateRange';
 
 const INGEST_TOKEN = process.env.INGEST_TOKEN || '';
 
@@ -66,8 +67,8 @@ editsRouter.get('/api/edits', requireAuth, async (req: Request, res: Response) =
   if (source) where.source = source;
   if (from || to) {
     where.createdAt = {
-      ...(from ? { gte: new Date(from) } : {}),
-      ...(to ? { lte: new Date(to) } : {}),
+      ...(from ? { gte: startOfDayUTC(from) } : {}),
+      ...(to ? { lte: endOfDayUTC(to) } : {}),
     };
   }
   if (q) where.text = { contains: q, mode: 'insensitive' };

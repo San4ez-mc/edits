@@ -1,12 +1,13 @@
 import { Router, type Request, type Response } from 'express';
 import { prisma } from '../db';
 import { requireAuth } from '../auth';
+import { startOfDayUTC, endOfDayUTC } from '../dateRange';
 
 export const analyticsRouter = Router();
 
 function parseRange(query: Record<string, string | undefined>) {
-  const to = query.to ? new Date(query.to) : new Date();
-  const from = query.from ? new Date(query.from) : new Date(to.getTime() - 30 * 24 * 60 * 60 * 1000);
+  const to = query.to ? endOfDayUTC(query.to) : new Date();
+  const from = query.from ? startOfDayUTC(query.from) : new Date(to.getTime() - 30 * 24 * 60 * 60 * 1000);
   return { from, to };
 }
 
