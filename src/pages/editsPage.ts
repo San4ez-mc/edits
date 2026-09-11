@@ -222,7 +222,10 @@ document.getElementById('m-save').onclick = async () => {
   page = 1; loadEdits();
 };
 
-const today = new Date().toISOString().slice(0, 10);
+// Локальна (не UTC!) дата браузера — toISOString() зсуває на UTC-офсет і біля
+// півночі за київським часом видавав би "вчора" замість "сьогодні".
+function localDateStr(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+const today = localDateStr(new Date());
 document.getElementById('f-from').value = today;
 document.getElementById('f-to').value = today;
 

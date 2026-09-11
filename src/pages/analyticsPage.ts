@@ -115,6 +115,15 @@ async function loadBarChart(){
 
 function loadAll(){ loadSummary(); loadLineChart(); loadBarChart(); }
 document.getElementById('btn-apply').onclick = loadAll;
+
+// Локальна (не UTC!) дата браузера — той самий фікс, що на /edits: toISOString()
+// зсуває на UTC-офсет і біля півночі за київським часом дав би "вчора".
+function localDateStr(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+const toDefault = new Date();
+const fromDefault = new Date(); fromDefault.setDate(fromDefault.getDate() - 6);
+document.getElementById('f-to').value = localDateStr(toDefault);
+document.getElementById('f-from').value = localDateStr(fromDefault);
+
 loadAll();
 `;
 
