@@ -40,6 +40,9 @@ th{color:#8b949e;font-weight:600;font-size:11.5px;text-transform:uppercase;lette
 .badge.no_effect{color:#f85149;border-color:#f85149}
 .badge.needs_admin{color:#d2a8ff;border-color:#8957e5}
 .badge.archived{color:#8b949e}
+select.status-select{font-size:11px;padding:2px 6px;border-radius:6px;cursor:pointer;background:#0d1117}
+select.status-select:disabled{opacity:.6;cursor:wait}
+.save-hint{font-size:11px}
 .spark{display:flex;align-items:flex-end;gap:2px;height:24px}
 .spark-bar{width:5px;background:#58a6ff;border-radius:1px;min-height:2px}
 .thumb{width:44px;height:44px;object-fit:cover;border-radius:6px;border:1px solid #30363d;cursor:zoom-in}

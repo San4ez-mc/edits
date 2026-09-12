@@ -129,11 +129,14 @@ async function loadEdits(){
     const date = fmtDateTimeShort(e.createdAt);
     const imgs = (e.images||[]).map(img => '<img class="thumb" src="'+img.filePath+'" onclick="openImg(\\''+img.filePath+'\\')">').join(' ');
     const cat = e.category ? esc(e.category.name) : '<span class="muted">без категорії</span>';
-    return '<tr><td>'+date+'</td><td style="max-width:420px">'+renderTextCell(e)+'</td><td>'+(imgs||'<span class="muted">—</span>')+'</td><td>'+esc(e.source)+'</td><td>'+cat+'</td><td><span class="badge '+e.status+'">'+(STATUS_LABELS[e.status]||e.status)+'</span></td>'
+    const statusOpts = Object.entries(STATUS_LABELS).map(([v,l]) => '<option value="'+v+'" '+(e.status===v?'selected':'')+'>'+l+'</option>').join('');
+    const statusSelect = '<select class="status-select badge '+e.status+'" data-status-id="'+e.id+'">'+statusOpts+'</select>';
+    return '<tr><td>'+date+'</td><td style="max-width:420px">'+renderTextCell(e)+'</td><td>'+(imgs||'<span class="muted">—</span>')+'</td><td>'+esc(e.source)+'</td><td>'+cat+'</td><td>'+statusSelect+' <span class="save-hint muted" id="save-hint-'+e.id+'"></span></td>'
       + '<td style="white-space:nowrap"><button class="ghost" data-edit="'+e.id+'">Редагувати</button> <button class="ghost" data-del="'+e.id+'" style="color:#f85149">Видалити</button></td></tr>';
   }).join('');
   rows.querySelectorAll('[data-edit]').forEach(btn => { btn.onclick = () => openEditModal(btn.dataset.edit); });
   rows.querySelectorAll('[data-del]').forEach(btn => { btn.onclick = () => deleteEdit(btn.dataset.del); });
+  rows.querySelectorAll('[data-status-id]').forEach(sel => { sel.onchange = () => updateStatusInline(sel); });
   rows.querySelectorAll('.more-toggle').forEach(a => { a.onclick = (ev) => {
     ev.preventDefault();
     const span = a.previousElementSibling;
@@ -162,6 +165,27 @@ async function openEditModal(id){
   document.getElementById('e-fixedAt').value = fmtDate(e.fixedAt);
   document.getElementById('e-error').textContent = '';
   document.getElementById('editModal').style.display = 'flex';
+}
+
+// Зміна статусу прямо з таблиці, без відкриття попапу редагування.
+async function updateStatusInline(sel){
+  const id = sel.dataset.statusId;
+  const newStatus = sel.value;
+  const oldStatus = editsById[id] ? editsById[id].status : null;
+  const hint = document.getElementById('save-hint-'+id);
+  sel.classList.remove(oldStatus);
+  sel.classList.add(newStatus);
+  sel.disabled = true;
+  const res = await fetch('/api/edits/'+id, { method: 'PATCH', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ status: newStatus }) });
+  const data = await res.json();
+  sel.disabled = false;
+  if(!data.ok){
+    sel.classList.remove(newStatus); sel.classList.add(oldStatus); sel.value = oldStatus;
+    if(hint){ hint.textContent = 'помилка'; hint.style.color = '#f85149'; setTimeout(()=>{ hint.textContent=''; }, 2500); }
+    return;
+  }
+  if(editsById[id]) editsById[id].status = newStatus;
+  if(hint){ hint.style.color = ''; hint.textContent = '✓'; setTimeout(()=>{ hint.textContent=''; }, 1500); }
 }
 
 async function deleteEdit(id){
